@@ -1,17 +1,20 @@
-FROM richarvey/nginx-php-fpm:3.1.6
+FROM serversideup/php:8.4-fpm-nginx
+
+# Cambiar al usuario root para poder configurar carpetas
+USER root
 
 # Copiar los archivos del proyecto al contenedor
-COPY . /var/www/html
+COPY --chown=www-data:www-data . /var/www/html
 
-# Configurar el directorio raíz público de Laravel
-ENV WEBROOT /var/www/html/public
-ENV COMPOSER_ALLOW_SUPERUSER 1
+# Configurar variables de entorno requeridas por Laravel
+ENV AUTORUN_ENABLED=true
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# CORRECCIÓN AQUÍ: Ignorar restricciones de versión de PHP en el despliegue
-RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs
+# Instalar dependencias de producción compatibles con PHP 8.4
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Dar permisos correctos a las carpetas de almacenamiento de Laravel
+# Asegurar permisos correctos
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 80
+# Regresar al usuario por defecto del contenedor
+USER www-data
