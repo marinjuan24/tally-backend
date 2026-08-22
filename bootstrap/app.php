@@ -4,16 +4,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Env;
-
-// Clear stale DB env vars from LAMPP so .env values take precedence
-foreach (['DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD'] as $key) {
-    if (getenv($key) !== false) {
-        putenv($key);
-        unset($_ENV[$key], $_SERVER[$key]);
-    }
-}
-Env::getRepository(); // Force fresh repository after clearing
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
