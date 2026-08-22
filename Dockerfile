@@ -1,7 +1,10 @@
 FROM serversideup/php:8.4-fpm-nginx
 
-# Cambiar al usuario root para poder configurar carpetas
+# Cambiar al usuario root para poder configurar extensiones PHP
 USER root
+
+# Instalar extensión pdo_mysql si no está disponible (necesaria para MySQL)
+RUN docker-php-ext-install pdo_mysql || true
 
 # Copiar los archivos del proyecto al contenedor
 COPY --chown=www-data:www-data . /var/www/html
