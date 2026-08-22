@@ -1,19 +1,17 @@
 FROM serversideup/php:8.4-fpm-nginx
 
-# Cambiar al usuario root para poder configurar extensiones PHP
+# Cambiar al usuario root para poder configurar carpetas
 USER root
-
-# Instalar extensión pdo_mysql si no está disponible (necesaria para MySQL)
-RUN docker-php-ext-install pdo_mysql || true
 
 # Copiar los archivos del proyecto al contenedor
 COPY --chown=www-data:www-data . /var/www/html
 
-# Configurar variables de entorno requeridas por Laravel
-ENV AUTORUN_ENABLED=true
+WORKDIR /var/www/html
+
+# Configurar variables de entorno
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Instalar dependencias de producción compatibles con PHP 8.4
+# Instalar dependencias de producción
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # Asegurar permisos correctos
