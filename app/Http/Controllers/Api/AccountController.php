@@ -23,13 +23,15 @@ class AccountController extends Controller
 
         return response()->json([
             'account' => [
-                'id'        => $user->account->id,
-                'balance'   => $user->account->balance,
-                'currency'  => $user->account->currency,
-                'status'    => $user->account->status,
-                'cards'     => $user->account->cards->map(fn ($card) => [
+                'id'             => $user->account->id,
+                'account_number' => $user->account->account_number,
+                'balance'        => $user->account->balance,
+                'currency'       => $user->account->currency,
+                'status'         => $user->account->status,
+                'cards'          => $user->account->cards->map(fn ($card) => [
                     'id'            => $card->id,
                     'masked_number' => $card->masked_number,
+                    'cvv'           => $card->cvv,
                     'card_holder'   => $card->card_holder,
                     'expiry_date'   => $card->expiry_date,
                     'card_type'     => $card->card_type,

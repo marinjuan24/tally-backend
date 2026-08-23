@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Card;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,9 +35,21 @@ class AuthController extends Controller
 
         // Create a bank account for the new user
         $account = Account::create([
-            'user_id'  => $user->id,
-            'balance'  => 1000.00, // Initial balance for testing
-            'currency' => 'USD',
+            'user_id'        => $user->id,
+            'account_number' => $user->account_number,
+            'balance'        => 1000.00, // Initial balance for testing
+            'currency'       => 'USD',
+        ]);
+
+        // Create a debit card for the new account
+        $card = Card::create([
+            'account_id'  => $account->id,
+            'card_number' => Card::generateCardNumber(),
+            'cvv'         => Card::generateCvv(),
+            'card_holder' => strtoupper($user->name),
+            'expiry_date' => Card::generateExpiryDate(),
+            'card_type'   => 'debit',
+            'is_active'   => true,
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -44,8 +57,21 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Usuario registrado exitosamente',
             'user'    => $user->only('id', 'name', 'email', 'phone', 'account_number'),
-            'account' => $account,
-            'token'   => $token,
+            'account' => [
+                'id'             => $account->id,
+                'account_number' => $account->account_number,
+                'balance'        => $account->balance,
+                'currency'       => $account->currency,
+            ],
+            'card' => [
+                'id'            => $card->id,
+                'masked_number' => $card->masked_number,
+                'cvv'           => $card->cvv,
+                'card_holder'   => $card->card_holder,
+                'expiry_date'   => $card->expiry_date,
+                'card_type'     => $card->card_type,
+            ],
+            'token' => $token,
         ], 201);
     }
 
@@ -104,7 +130,22 @@ class AuthController extends Controller
                 'phone'          => $user->phone,
                 'photo'          => $user->photo,
                 'account_number' => $user->account_number,
-                'account'        => $user->account,
+                'account'        => $user->account ? [
+                    'id'             => $user->account->id,
+                    'account_number' => $user->account->account_number,
+                    'balance'        => $user->account->balance,
+                    'currency'       => $user->account->currency,
+                    'status'         => $user->account->status,
+                    'cards'          => $user->account->cards->map(fn ($card) => [
+                        'id'            => $card->id,
+                        'masked_number' => $card->masked_number,
+                        'cvv'           => $card->cvv,
+                        'card_holder'   => $card->card_holder,
+                        'expiry_date'   => $card->expiry_date,
+                        'card_type'     => $card->card_type,
+                        'is_active'     => $card->is_active,
+                    ]),
+                ] : null,
             ],
         ]);
     }
