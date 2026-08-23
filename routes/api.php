@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FrequentPayeeController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\TransferController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,4 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Frequent payees
     Route::apiResource('frequent-payees', FrequentPayeeController::class)->except(['show']);
+
+    // Transaction history
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });

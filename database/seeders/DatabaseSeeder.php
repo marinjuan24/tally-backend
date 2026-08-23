@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        // First, create the Tally system account
+        $this->call(TallyAccountSeeder::class);
+
         // Create test users
         $users = [
             [
@@ -50,17 +53,18 @@ class DatabaseSeeder extends Seeder
         $balances = [5000.00, 12500.50, 800.00];
         foreach ($createdUsers as $i => $user) {
             Account::create([
-                'user_id'  => $user->id,
-                'balance'  => $balances[$i],
-                'currency' => 'USD',
+                'user_id'        => $user->id,
+                'account_number' => $user->account_number,
+                'balance'        => $balances[$i],
+                'currency'       => 'USD',
             ]);
         }
 
         // Create cards
         $cardData = [
-            ['card_number' => '4532015112830366', 'card_holder' => 'JUAN PEREZ',    'expiry_date' => '12/28', 'card_type' => 'debit'],
-            ['card_number' => '5425233430109903', 'card_holder' => 'MARIA GARCIA',   'expiry_date' => '06/27', 'card_type' => 'debit'],
-            ['card_number' => '4916338506082832', 'card_holder' => 'CARLOS LOPEZ',   'expiry_date' => '03/29', 'card_type' => 'credit'],
+            ['card_number' => '4532015112830366', 'cvv' => '123', 'card_holder' => 'JUAN PEREZ',    'expiry_date' => '12/28', 'card_type' => 'debit'],
+            ['card_number' => '5425233430109903', 'cvv' => '456', 'card_holder' => 'MARIA GARCIA',   'expiry_date' => '06/27', 'card_type' => 'debit'],
+            ['card_number' => '4916338506082832', 'cvv' => '789', 'card_holder' => 'CARLOS LOPEZ',   'expiry_date' => '03/29', 'card_type' => 'credit'],
         ];
 
         foreach ($createdUsers as $i => $user) {

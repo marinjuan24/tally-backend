@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Transaction;
 use App\Models\Transfer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -65,7 +66,7 @@ class TransferController extends Controller
             $receiver->account->increment('balance', $validated['amount']);
 
             // Create transfer record
-            return Transfer::create([
+            $transfer = Transfer::create([
                 'sender_id'   => $sender->id,
                 'receiver_id' => $receiver->id,
                 'amount'      => $validated['amount'],
@@ -73,6 +74,28 @@ class TransferController extends Controller
                 'reference'   => Transfer::generateReference(),
                 'status'      => 'completed',
             ]);
+
+            // Create transaction record for sender (retiro)
+            Transaction::create([
+                'account_id' => $sender->account->id,
+                'type'       => 'retiro',
+                'motive'     => 'transferencia_tercero',
+                'sender'     => $sender->name,
+                'amount'     => $validated['amount'],
+                'reference'  => $transfer->reference,
+            ]);
+
+            // Create transaction record for receiver (abono)
+            Transaction::create([
+                'account_id' => $receiver->account->id,
+                'type'       => 'abono',
+                'motive'     => 'transferencia_tercero',
+                'sender'     => $sender->name,
+                'amount'     => $validated['amount'],
+                'reference'  => $transfer->reference,
+            ]);
+
+            return $transfer;
         });
 
         $transfer->load(['sender', 'receiver']);

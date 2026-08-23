@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Card;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -37,7 +39,7 @@ class AuthController extends Controller
         $account = Account::create([
             'user_id'        => $user->id,
             'account_number' => $user->account_number,
-            'balance'        => 1000.00, // Initial balance for testing
+            'balance'        => 0.00,
             'currency'       => 'USD',
         ]);
 
@@ -51,6 +53,35 @@ class AuthController extends Controller
             'card_type'   => 'debit',
             'is_active'   => true,
         ]);
+
+        // Give 50 USD registration reward from Tally
+        $tallyUser = User::where('email', 'tally@bancoficticio.com')->first();
+        if ($tallyUser && $tallyUser->account) {
+            DB::transaction(function () use ($user, $account, $tallyUser) {
+                // Deduct from Tally
+                $tallyUser->account->decrement('balance', 50.00);
+                // Add to new user
+                $account->increment('balance', 50.00);
+                // Create transaction record for Tally (sender side)
+                Transaction::create([
+                    'account_id' => $tallyUser->account->id,
+                    'type'       => 'retiro',
+                    'motive'     => 'recompensa',
+                    'sender'     => 'Tally',
+                    'amount'     => 50.00,
+                    'reference'  => Transaction::generateReference(),
+                ]);
+                // Create transaction record for new user (receiver side)
+                Transaction::create([
+                    'account_id' => $account->id,
+                    'type'       => 'abono',
+                    'motive'     => 'registro',
+                    'sender'     => 'Tally',
+                    'amount'     => 50.00,
+                    'reference'  => Transaction::generateReference(),
+                ]);
+            });
+        }
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
