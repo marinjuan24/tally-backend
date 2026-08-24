@@ -96,7 +96,7 @@ class AuthController extends Controller
             ],
             'card' => [
                 'id'            => $card->id,
-                'masked_number' => $card->masked_number,
+                'card_number' => $card->card_number,
                 'cvv'           => $card->cvv,
                 'card_holder'   => $card->card_holder,
                 'expiry_date'   => $card->expiry_date,
@@ -169,7 +169,7 @@ class AuthController extends Controller
                     'status'         => $user->account->status,
                     'cards'          => $user->account->cards->map(fn ($card) => [
                         'id'            => $card->id,
-                        'masked_number' => $card->masked_number,
+                        'card_number' => $card->card_number,
                         'cvv'           => $card->cvv,
                         'card_holder'   => $card->card_holder,
                         'expiry_date'   => $card->expiry_date,

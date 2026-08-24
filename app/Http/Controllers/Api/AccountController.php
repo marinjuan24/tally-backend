@@ -13,6 +13,7 @@ class AccountController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        
         $user = $request->user()->load('account.cards');
 
         if (!$user->account) {
@@ -30,7 +31,7 @@ class AccountController extends Controller
                 'status'         => $user->account->status,
                 'cards'          => $user->account->cards->map(fn ($card) => [
                     'id'            => $card->id,
-                    'masked_number' => $card->masked_number,
+                    'card_number' => $card->card_number,
                     'cvv'           => $card->cvv,
                     'card_holder'   => $card->card_holder,
                     'expiry_date'   => $card->expiry_date,
