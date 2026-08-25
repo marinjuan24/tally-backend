@@ -35,7 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::get('/profile/photo', [ProfileController::class, 'showPhoto']);
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
-    Route::get('/photo/{filename}', [ProfileController::class, 'servePhoto'])->middleware('auth:sanctum');
 
     // Account
     Route::get('/account', [AccountController::class, 'index']);

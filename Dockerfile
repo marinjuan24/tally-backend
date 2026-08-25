@@ -14,8 +14,10 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 # Instalar dependencias de producción
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Asegurar permisos correctos
-RUN chown -R www-data:www-data /var/www/html/vendor \
+# Crear directorios de storage y symlink
+RUN mkdir -p bootstrap/cache \
+    && php artisan storage:link --force \
+    && chown -R www-data:www-data /var/www/html/vendor \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Regresar al usuario por defecto del contenedor
