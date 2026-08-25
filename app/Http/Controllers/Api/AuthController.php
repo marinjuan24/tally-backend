@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -128,7 +129,10 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Inicio de sesión exitoso',
-            'user'    => $user->only('id', 'name', 'email', 'phone', 'photo', 'account_number'),
+            'user'    => array_merge(
+                $user->only('id', 'name', 'email', 'phone', 'account_number'),
+                ['photo' => $user->photo ? Storage::disk('public')->url($user->photo) : null]
+            ),
             'token'   => $token,
         ]);
     }
@@ -159,7 +163,7 @@ class AuthController extends Controller
                 'name'           => $user->name,
                 'email'          => $user->email,
                 'phone'          => $user->phone,
-                'photo'          => $user->photo,
+                'photo'          => $user->photo ? Storage::disk('public')->url($user->photo) : null,
                 'account_number' => $user->account_number,
                 'account'        => $user->account ? [
                     'id'             => $user->account->id,

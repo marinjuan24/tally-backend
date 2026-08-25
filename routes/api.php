@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
+    Route::get('/profile/photo', [ProfileController::class, 'showPhoto']);
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
 
     // Account

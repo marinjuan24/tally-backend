@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
@@ -22,7 +23,7 @@ class ProfileController extends Controller
                 'name'           => $user->name,
                 'email'          => $user->email,
                 'phone'          => $user->phone,
-                'photo'          => $user->photo,
+                'photo'          => $user->photo ? Storage::disk('public')->url($user->photo) : null,
                 'account_number' => $user->account_number,
                 'account'        => $user->account,
             ],
@@ -44,6 +45,33 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Perfil actualizado',
             'user'    => $request->user()->only('id', 'name', 'email', 'phone', 'account_number'),
+        ]);
+    }
+
+    /**
+     * Serve user profile photo.
+     */
+    public function showPhoto(Request $request): Response
+    {
+        $user = $request->user();
+
+        if (!$user->photo) {
+            abort(404, 'No hay foto de perfil');
+        }
+
+        $path = Storage::disk('public')->path($user->photo);
+
+        if (!file_exists($path)) {
+            abort(404, 'Archivo de foto no encontrado');
+        }
+
+        $mime = mime_content_type($path);
+        $content = file_get_contents($path);
+
+        return response($content, 200, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'inline',
+            'Cache-Control'       => 'public, max-age=86400',
         ]);
     }
 
