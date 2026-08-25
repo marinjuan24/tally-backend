@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Card;
 use App\Models\Transaction;
+use App\Models\Transfer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,17 @@ class AuthController extends Controller
                 $tallyUser->account->decrement('balance', 50.00);
                 // Add to new user
                 $account->increment('balance', 50.00);
+
+                // Create transfer record
+                $transfer = Transfer::create([
+                    'sender_id'   => $tallyUser->id,
+                    'receiver_id' => $user->id,
+                    'amount'      => 50.00,
+                    'concept'     => 'Recompensa por registro',
+                    'reference'   => Transfer::generateReference(),
+                    'status'      => 'completed',
+                ]);
+
                 // Create transaction record for Tally (sender side)
                 Transaction::create([
                     'account_id' => $tallyUser->account->id,
@@ -70,7 +82,7 @@ class AuthController extends Controller
                     'motive'     => 'recompensa',
                     'sender'     => 'Tally',
                     'amount'     => 50.00,
-                    'reference'  => Transaction::generateReference(),
+                    'reference'  => $transfer->reference,
                 ]);
                 // Create transaction record for new user (receiver side)
                 Transaction::create([
@@ -79,7 +91,7 @@ class AuthController extends Controller
                     'motive'     => 'registro',
                     'sender'     => 'Tally',
                     'amount'     => 50.00,
-                    'reference'  => Transaction::generateReference(),
+                    'reference'  => $transfer->reference,
                 ]);
             });
         }

@@ -29,11 +29,12 @@ class BankApiTest extends TestCase
             'account_number' => '1000000001',
         ]);
 
-        Account::create(['user_id' => $this->user->id, 'balance' => 5000, 'currency' => 'USD']);
+        Account::create(['user_id' => $this->user->id, 'account_number' => $this->user->account_number, 'balance' => 5000, 'currency' => 'USD']);
 
         Card::create([
             'account_id' => $this->user->account->id,
             'card_number' => '4532015112830366',
+            'cvv' => '123',
             'card_holder' => 'JUAN PEREZ',
             'expiry_date' => '12/28',
             'card_type' => 'debit',
@@ -46,7 +47,7 @@ class BankApiTest extends TestCase
             'account_number' => '1000000002',
         ]);
 
-        Account::create(['user_id' => $this->other->id, 'balance' => 2000, 'currency' => 'USD']);
+        Account::create(['user_id' => $this->other->id, 'account_number' => $this->other->account_number, 'balance' => 2000, 'currency' => 'USD']);
 
         $this->token = $this->user->createToken('test-token')->plainTextToken;
     }
