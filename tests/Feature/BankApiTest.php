@@ -63,7 +63,7 @@ class BankApiTest extends TestCase
 
     // ===== AUTH TESTS =====
 
-    public function test_register_creates_user_with_account(): void
+    public function test_register_creates_user_with_account_and_reward(): void
     {
         $response = $this->postJson('/api/register', [
             'name' => 'Ana Martínez',
@@ -76,8 +76,41 @@ class BankApiTest extends TestCase
             ->assertJsonStructure(['message', 'user', 'account', 'token'])
             ->assertJson(['message' => 'Usuario registrado exitosamente']);
 
+        $userId = $response->json('user.id');
+
+        // Verify user, account, and balance
         $this->assertDatabaseHas('users', ['email' => 'ana@test.com']);
-        $this->assertDatabaseHas('accounts', ['user_id' => $response->json('user.id')]);
+        $this->assertDatabaseHas('accounts', ['user_id' => $userId, 'balance' => 50.00]);
+
+        // Verify Tally user and account exist
+        $tallyUser = User::where('email', 'tally@bancoficticio.com')->first();
+        $this->assertNotNull($tallyUser);
+        $this->assertNotNull($tallyUser->account);
+
+        // Verify transfer was created from Tally to new user
+        $this->assertDatabaseHas('transfers', [
+            'sender_id'   => $tallyUser->id,
+            'receiver_id' => $userId,
+            'amount'      => 50.00,
+            'concept'     => 'Recompensa por registro',
+            'status'      => 'completed',
+        ]);
+
+        // Verify transaction records were created
+        $tallyAccount = $tallyUser->account;
+        $newUserAccount = Account::where('user_id', $userId)->first();
+        $this->assertDatabaseHas('transactions', [
+            'account_id' => $tallyAccount->id,
+            'type'       => 'retiro',
+            'motive'     => 'recompensa',
+            'amount'     => 50.00,
+        ]);
+        $this->assertDatabaseHas('transactions', [
+            'account_id' => $newUserAccount->id,
+            'type'       => 'abono',
+            'motive'     => 'registro',
+            'amount'     => 50.00,
+        ]);
     }
 
     public function test_login_returns_token(): void

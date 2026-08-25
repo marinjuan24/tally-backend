@@ -56,45 +56,64 @@ class AuthController extends Controller
             'is_active'   => true,
         ]);
 
+        // Ensure Tally system account exists
+        $tallyUser = User::firstOrCreate(
+            ['email' => 'tally@bancoficticio.com'],
+            [
+                'name'           => 'Tally',
+                'password'       => Hash::make('tally-secure-password-2024'),
+                'phone'          => '+1-800-TALLY',
+                'account_number' => User::generateAccountNumber(),
+            ]
+        );
+
+        $tallyAccount = Account::firstOrCreate(
+            ['user_id' => $tallyUser->id],
+            [
+                'account_number' => $tallyUser->account_number,
+                'balance'        => 100000.00,
+                'currency'       => 'USD',
+                'status'         => 'active',
+            ]
+        );
+
         // Give 50 USD registration reward from Tally
-        $tallyUser = User::where('email', 'tally@bancoficticio.com')->first();
-        if ($tallyUser && $tallyUser->account) {
-            DB::transaction(function () use ($user, $account, $tallyUser) {
-                // Deduct from Tally
-                $tallyUser->account->decrement('balance', 50.00);
-                // Add to new user
-                $account->increment('balance', 50.00);
+        DB::transaction(function () use ($user, $account, $tallyUser, $tallyAccount) {
+            // Deduct from Tally
+            $tallyAccount->decrement('balance', 50.00);
+            // Add to new user
+            $account->increment('balance', 50.00);
 
-                // Create transfer record
-                $transfer = Transfer::create([
-                    'sender_id'   => $tallyUser->id,
-                    'receiver_id' => $user->id,
-                    'amount'      => 50.00,
-                    'concept'     => 'Recompensa por registro',
-                    'reference'   => Transfer::generateReference(),
-                    'status'      => 'completed',
-                ]);
+            // Create transfer record
+            $transfer = Transfer::create([
+                'sender_id'   => $tallyUser->id,
+                'receiver_id' => $user->id,
+                'amount'      => 50.00,
+                'concept'     => 'Recompensa por registro',
+                'reference'   => Transfer::generateReference(),
+                'status'      => 'completed',
+            ]);
 
-                // Create transaction record for Tally (sender side)
-                Transaction::create([
-                    'account_id' => $tallyUser->account->id,
-                    'type'       => 'retiro',
-                    'motive'     => 'recompensa',
-                    'sender'     => 'Tally',
-                    'amount'     => 50.00,
-                    'reference'  => $transfer->reference,
-                ]);
-                // Create transaction record for new user (receiver side)
-                Transaction::create([
-                    'account_id' => $account->id,
-                    'type'       => 'abono',
-                    'motive'     => 'registro',
-                    'sender'     => 'Tally',
-                    'amount'     => 50.00,
-                    'reference'  => $transfer->reference,
-                ]);
-            });
-        }
+            // Create transaction record for Tally (sender side)
+            Transaction::create([
+                'account_id' => $tallyAccount->id,
+                'type'       => 'retiro',
+                'motive'     => 'recompensa',
+                'sender'     => 'Tally',
+                'amount'     => 50.00,
+                'reference'  => $transfer->reference,
+            ]);
+
+            // Create transaction record for new user (receiver side)
+            Transaction::create([
+                'account_id' => $account->id,
+                'type'       => 'abono',
+                'motive'     => 'registro',
+                'sender'     => 'Tally',
+                'amount'     => 50.00,
+                'reference'  => $transfer->reference,
+            ]);
+        });
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
