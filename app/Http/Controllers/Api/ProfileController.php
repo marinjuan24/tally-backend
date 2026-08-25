@@ -23,10 +23,39 @@ class ProfileController extends Controller
                 'name'           => $user->name,
                 'email'          => $user->email,
                 'phone'          => $user->phone,
-                'photo'          => $user->photo ? Storage::disk('public')->url($user->photo) : null,
+                'photo'          => $user->photo ? $this->getPhotoUrl($user->photo) : null,
                 'account_number' => $user->account_number,
                 'account'        => $user->account,
             ],
+        ]);
+    }
+
+    /**
+     * Generar URL de la foto sin storage link
+     */
+    private function getPhotoUrl($path): string
+    {
+        // Usar una ruta directa en lugar de storage link
+        return config('app.url') . '/api/photo/' . basename($path);
+    }
+
+    /**
+     * Servir la foto directamente desde el controlador
+     */
+    public function servePhoto($filename): Response
+    {
+        $path = storage_path('app/public/photos/' . $filename);
+        
+        if (!file_exists($path)) {
+            abort(404, 'Foto no encontrada');
+        }
+
+        $mime = mime_content_type($path);
+        $content = file_get_contents($path);
+
+        return response($content, 200, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=86400',
         ]);
     }
 
