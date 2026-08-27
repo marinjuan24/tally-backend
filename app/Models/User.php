@@ -47,6 +47,16 @@ class User extends Authenticatable
         return $this->hasMany(FrequentPayee::class, 'user_id');
     }
 
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->notifications()->unread()->count();
+    }
+
     /**
      * Generate a unique 10-digit account number.
      */

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Card;
+use App\Models\Notification;
 use App\Models\Transaction;
 use App\Models\Transfer;
 use App\Models\User;
@@ -112,6 +113,22 @@ class AuthController extends Controller
                 'sender'     => 'Tally',
                 'amount'     => 50.00,
                 'reference'  => $transfer->reference,
+            ]);
+
+            // Notificación para el nuevo usuario
+            Notification::create([
+                'user_id' => $user->id,
+                'type'    => 'transfer_received',
+                'title'   => 'Has recibido una transferencia',
+                'message' => 'Tally te ha enviado $50.00 USD como recompensa por registro',
+                'data'    => [
+                    'transfer_id' => $transfer->id,
+                    'reference'   => $transfer->reference,
+                    'amount'      => 50.00,
+                    'currency'    => 'USD',
+                    'sender_name' => 'Tally',
+                    'concept'     => 'Recompensa por registro',
+                ],
             ]);
         });
 

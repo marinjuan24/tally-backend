@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Notification;
 use App\Models\Transaction;
 use App\Models\Transfer;
 use App\Models\User;
@@ -99,6 +100,38 @@ class TransferController extends Controller
         });
 
         $transfer->load(['sender', 'receiver']);
+
+        // Crear notificación para el receptor
+        Notification::create([
+            'user_id' => $receiver->id,
+            'type'    => 'transfer_received',
+            'title'   => 'Has recibido una transferencia',
+            'message' => "{$sender->name} te ha enviado {$validated['amount']} {$sender->account->currency}",
+            'data'    => [
+                'transfer_id' => $transfer->id,
+                'reference'   => $transfer->reference,
+                'amount'      => $validated['amount'],
+                'currency'    => $sender->account->currency,
+                'sender_name' => $sender->name,
+                'concept'     => $validated['concept'] ?? null,
+            ],
+        ]);
+
+        // Crear notificación para el emisor
+        Notification::create([
+            'user_id' => $sender->id,
+            'type'    => 'transfer_sent',
+            'title'   => 'Transferencia realizada',
+            'message' => "Has enviado {$validated['amount']} {$sender->account->currency} a {$receiver->name}",
+            'data'    => [
+                'transfer_id'   => $transfer->id,
+                'reference'     => $transfer->reference,
+                'amount'        => $validated['amount'],
+                'currency'      => $sender->account->currency,
+                'receiver_name' => $receiver->name,
+                'concept'       => $validated['concept'] ?? null,
+            ],
+        ]);
 
         return response()->json([
             'message'  => 'Transferencia realizada exitosamente',
